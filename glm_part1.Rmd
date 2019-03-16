@@ -2,7 +2,13 @@
 title: "GLM Part1"
 author: "Murray Logan"
 date: "16 March 2019"
-output: html_document
+output:
+  html_document: 
+    code_folding: show
+    collapse: no
+    theme: spacelab
+    toc: yes
+    toc_float: yes
 bibliography: references.bib
 ---
 
@@ -24,22 +30,21 @@ Here is an example from @Fowler-1998-1998. An agriculturalist was interested in 
 
 ![](../images/turf.jpg)
 
-
-FERTILIZER   YIELD
------------- -------
-25           84
-50           80
-75           90
-100          154
-125          148
-\...         \...
+| FERTILIZER   | YIELD   |
+| ------------ | ------- |
+| 25           | 84      |
+| 50           | 80      |
+| 75           | 90      |
+| 100          | 154     |
+| 125          | 148     |
+| \...         | \...    |
 
 ---------------- ---------------------------------------------------
-**FERTILIZER**   Mass of fertilizer (g.m^-2^) - Predictor variable
-**YIELD**        Yield of grass (g.m^-2^) - Response variable
+**FERTILIZER**:   Mass of fertilizer (g.m^-2^) - Predictor variable
+**YIELD**:        Yield of grass (g.m^-2^) - Response variable
 ---------------- ---------------------------------------------------
-
-
+ 
+ 
 The aim of the analysis is to investigate the relationship between fertilizer concentration and grass yield.
 
 # Read in the data
