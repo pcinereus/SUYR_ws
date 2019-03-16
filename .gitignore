@@ -2,3 +2,6 @@
 .Rproj.user
 .Rhistory
 *.*#
+*.docx
+*.pdf
+*.html

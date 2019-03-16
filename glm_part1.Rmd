@@ -3,12 +3,39 @@ title: "GLM Part1"
 author: "Murray Logan"
 date: "16 March 2019"
 output:
-  html_document: 
+  html_document:
     code_folding: show
     collapse: no
+    df_print: kable
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    highlight: textmate
     theme: spacelab
     toc: yes
     toc_float: yes
+  pdf_document:
+    df_print: default
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    highlight: tango
+    latex_engine: xelatex
+    number_sections: yes
+    toc_depth: 2
+  word_document:
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    highlight: tango
+    toc: yes
+    toc_depth: 2
+documentclass: article
+fontsize: 12pt
+mainfont: Arial
+mathfont: LiberationMono
+monofont: DejaVu Sans Mono
+classoption: a4paper
 bibliography: references.bib
 ---
 
@@ -59,7 +86,7 @@ glimpse(fert)
 
 Model formula:
 $$
-y_i \sim{} \mathcal{N}(\mu_i, \sigma^2) \\
+y_i \sim{} \mathcal{N}(\mu_i, \sigma^2)\\
 \mu_i = \beta_0 + \beta_1 x_i
 $$
 
