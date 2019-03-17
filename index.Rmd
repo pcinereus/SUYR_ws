@@ -1,0 +1,79 @@
+---
+title: "Index"
+author: "Murray Logan"
+date: "16 March 2019"
+output:
+  html_document:
+    code_folding: show
+    collapse: no
+    df_print: kable
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    highlight: textmate
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    df_print: default
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    highlight: tango
+    latex_engine: xelatex
+    number_sections: yes
+    toc_depth: 2
+  word_document:
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    highlight: tango
+    toc: yes
+    toc_depth: 2
+documentclass: article
+fontsize: 12pt
+mainfont: Arial
+mathfont: LiberationMono
+monofont: DejaVu Sans Mono
+classoption: a4paper
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Basic R
+
+# Reproducible research (Rmarkdown and knitr)
+
+# Data processing
+
+# Data visualization
+
+# Generalized linear models
+
+* [Simple linear regression (Gausian)](glm_part1.html)
+* [Logistic regression (Binomial)](glm_part2.html)
+* [Poisson regression (Poisson)](glm_part3.html)
+* [Multiple regression (Gaussian)](glm_part4.html)
+* [Poisson single factor anova (Poisson)](glm_part5.html)
+
+
+# Generalized linear mixed effects models
+
+* [Randomized Complete Block (Gausian)](glmm_part1.html)
+* [Split plot (Gausian)](glmm_part2.html)
+* [Split plot (Gausian)](glmm_part3.html)
+* [Randomized Complete Block (Binomial)](glmm_part4.html)
+* [Split plot (Zero-inflated Negative Binomial)](glmm_part5.html)
+* [Split plot (Gaussian)](glmm_part6.html)
+* [Split plot (Gamma)](glmm_part7.html)
+
+# Generalized Additive models
+
+# Regression trees
+
+# Bayesian analyses
+
+# Multivariate analyses
