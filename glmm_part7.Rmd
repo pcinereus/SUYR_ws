@@ -78,7 +78,7 @@ option, she did not have a set of independent measurements for each
 oxygen concentration, by repeated measurements on each animal across the
 8 oxygen concentrations.
 
-![Toad](../images/bufo.jpg){width="251" height="290"}
+![Toad](images/bufo.jpg){width="251" height="290"}
 
 Format of mullens.csv data file
 

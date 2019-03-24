@@ -53,7 +53,7 @@ library(tidyverse)
 
 # Scenario
 
-![fanworms](../images/fanworms.jpg){width="157" height="160"}
+![fanworms](images/fanworms.jpg){width="157" height="160"}
 
 In an attempt to understand the effects on marine animals of short-term
 exposure to toxic substances, such as might occur following a spill, or

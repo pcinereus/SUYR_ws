@@ -58,7 +58,7 @@ and brood effects of sheep ticks *Ixodes ricinus* on red grouse
 *Lagopus lagopus scoticus* chicks.
 
 
-![Red grouse chicks](../images/redgrousechicks.jpg){width="251" height="290"}
+![Red grouse chicks](images/redgrousechicks.jpg){width="251" height="290"}
 
 Format of elston.csv data file
 
