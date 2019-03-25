@@ -1,0 +1,104 @@
+---
+title: "GAM Part 1"
+author: "Murray Logan"
+date: "16 March 2019"
+output:
+  html_document:
+    code_folding: show
+    collapse: no
+    df_print: kable
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    highlight: textmate
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    df_print: default
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    highlight: tango
+    latex_engine: xelatex
+    number_sections: yes
+    toc_depth: 2
+  word_document:
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    highlight: tango
+    toc: yes
+    toc_depth: 2
+documentclass: article
+fontsize: 12pt
+mainfont: Arial
+mathfont: LiberationMono
+monofont: DejaVu Sans Mono
+classoption: a4paper
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Preparations
+
+Load the necessary libraries
+
+```{r libraries, results='markdown', eval=TRUE}
+library(tidyverse)
+```
+
+# Scenario
+
+This is an entirely fabricated example (how embarrising).
+So here is a picture of some Red Grouse Chicks to compensate..
+
+![Red grouse chicks](images/redgrousechicks.jpg){width="251" height="290"}
+
+Format of data.gp.csv data file
+
+x  y
+-- --
+-8 -2
+-6 0
+-2 1
+0  2
+4  -1
+
+-------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+**x**     - a continuous predictor
+**y**     - a continuous response
+-------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Read in the data
+
+```{r readData, results='markdown', eval=TRUE}
+data.gp = read_csv('data/data.gp.csv', trim_ws=TRUE)
+glimpse(data.gp)
+```
+
+
+# Exploratory data analysis
+
+Model formula:
+$$
+y_i \sim{} \mathcal{N}(\mu_i, \sigma^2)\\
+\mu_i =\beta_0 + f(x_i)
+$$
+
+where $\beta_0$ is the y-intercept, and $f(x)$ indicates an additive smoothing function of $x$. 
+
+# Fit the model
+
+# Model validation
+
+# Model investigation / hypothesis testing
+
+# Predictions
+
+# Summary figures
+
+# References

@@ -27,3 +27,48 @@ ACF.merMod <- function(object, maxLag, resType = c("pearson", "response",
     class(z) <- c("ACF", "data.frame")
     z
 }
+
+
+emm_basis.gam = function(object, trms, xlev, grid, nboot = 800, ...) {
+    if (!is.null(object$gcv.ubre)) # From mgcv, not gam
+        return (emm_basis.gam_mgcv(object, trms, xlev, grid, ...))
+    
+    result = emm_basis.lm(object, trms, xlev, grid, ...)
+    old.smooth = object$smooth
+    if (is.null(old.smooth))  # "just an ordinary glm" (My Fair Lady)
+        return(result)
+    # else we need to add-in some smoothers
+    smooth.frame = model.frame(trms, grid, na.action = na.pass, xlev = xlev)
+    data = object$smooth.frame
+    labs = names(data)
+    w = object$weights
+    resid = object$residuals
+    for (i in seq_along(labs)) {
+        lab = labs[i]
+        sig = apply(smooth.frame[[i]], 1, paste, collapse = ":")
+        usig = unique(sig)
+        rows = lapply(usig, function(s) which(sig == s))
+        xeval = smooth.frame[sapply(rows, "[", 1), lab]
+        bsel = matrix(0, nrow = length(sig), ncol = length(usig))
+        for (j in seq_along(rows))
+            bsel[rows[[j]], j] = 1
+        
+        cl = attr(data[[i]], "call")
+        cl$xeval = substitute(xeval)
+        z = resid + old.smooth[, lab]
+        bh = as.numeric(eval(cl))
+        m = length(bh)
+        n = length(result$bhat)
+        result$bhat = c(result$bhat, bh)
+        result$X = cbind(result$X, bsel)
+        boot = replicate(nboot, {
+                z = sample(resid, replace = TRUE) + old.smooth[, lab]
+                as.numeric(eval(cl))
+            })
+        covar = if(m == 1) var(boot) 
+                else       cov(t(boot))
+        result$V = rbind(cbind(result$V, matrix(0, nrow = n, ncol = m)),
+                         cbind(matrix(0, nrow = m, ncol = n), covar))
+    }
+    result
+}
