@@ -72,3 +72,27 @@ emm_basis.gam = function(object, trms, xlev, grid, nboot = 800, ...) {
     }
     result
 }
+
+
+mcmcpvalue <- function(samp)
+{
+    ## elementary version that creates an empirical p-value for the
+    ## hypothesis that the columns of samp have mean zero versus a
+    ## general multivariate distribution with elliptical contours.
+    
+    ## differences from the mean standardized by the observed
+    ## variance-covariance factor
+    
+    ## Note, I put in the bit for single terms
+    if (length(dim(samp))==0) {
+        std <- backsolve(chol(var(samp)),cbind(0, t(samp)) - mean(samp),transpose = TRUE)
+        sqdist <- colSums(std * std)
+        sum(sqdist[-1] > sqdist[1])/length(samp)
+    }
+    else {
+        std <- backsolve(chol(var(samp)),cbind(0, t(samp)) - colMeans(samp),transpose = TRUE)
+        sqdist <- colSums(std * std)
+        sum(sqdist[-1] > sqdist[1])/nrow(samp)
+    }
+    
+}
