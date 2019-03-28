@@ -88,7 +88,7 @@ Autumn   Low       14         3.74           AutumnLow
 **GROUPS**         Categorical listing of Season/Density combinations - used for checking ANOVA assumptions
 ------------------ --------------------------------------------------------------------------------------------
 
-![Mussel](../images/mussels.jpg){height="300"}
+![Mussel](images/mussels.jpg){height="300"}
 
 # Read in the data
 
