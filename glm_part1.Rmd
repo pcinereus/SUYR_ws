@@ -1,12 +1,12 @@
 ---
 title: "GLM Part1"
 author: "Murray Logan"
-date: "16 March 2019"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     code_folding: show
     collapse: no
-    df_print: kable
+    df_print: paged
     fig_caption: yes
     fig_height: 4
     fig_width: 4
@@ -47,7 +47,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Load the necessary libraries
 
-```{r libraries, results='markdown', eval=TRUE}
+```{r libraries, results='markdown', eval=TRUE, warning=TRUE, message=FALSE}
 library(tidyverse)
 ```
 
@@ -55,7 +55,7 @@ library(tidyverse)
 
 Here is an example from @Fowler-1998-1998. An agriculturalist was interested in the effects of fertilizer load on the yield of grass.  Grass seed was sown uniformly over an area and different quantities of commercial fertilizer were applied to each of ten 1 m<sup>2</sup> randomly located plots.  Two months later the grass from each plot was harvested, dried and weighed.  The data are in the file **fertilizer.csv** in the **data** folder.
 
-![](../images/turf.jpg)
+![](../images/turf.jpg){width=70%}
 
 | FERTILIZER   | YIELD   |
 | ------------ | ------- |
