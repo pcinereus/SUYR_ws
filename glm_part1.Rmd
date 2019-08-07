@@ -49,6 +49,7 @@ Load the necessary libraries
 
 ```{r libraries, results='markdown', eval=TRUE, warning=TRUE, message=FALSE}
 library(tidyverse)
+library(car)
 ```
 
 # Scenario
