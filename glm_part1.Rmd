@@ -48,8 +48,14 @@ knitr::opts_chunk$set(echo = TRUE)
 Load the necessary libraries
 
 ```{r libraries, results='markdown', eval=TRUE, warning=TRUE, message=FALSE}
-library(tidyverse)
-library(car)
+library(car)       #for regression diagnostics
+library(broom)     #for tidy output
+library(ggfortify) #for model diagnostics
+library(sjPlot)    #for outputs
+library(knitr)     #for kable
+library(effects)   #for partial effects plots
+library(emmeans)   #for estimating marginal means
+library(tidyverse) #for data wrangling
 ```
 
 # Scenario
@@ -80,6 +86,8 @@ The aim of the analysis is to investigate the relationship between fertilizer co
 ```{r readData, results='markdown', eval=TRUE}
 fert = read_csv('data/fertilizer.csv', trim_ws=TRUE)
 glimpse(fert)
+head(fert)
+str(fert)
 ```
 
 
@@ -98,8 +106,8 @@ $$
 
 # Model investigation / hypothesis testing
 
-# Predictions
 
+# Predictions
 # Summary figures
 
 # References
