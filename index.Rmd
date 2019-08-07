@@ -1,7 +1,7 @@
 ---
 title: "Index"
 author: "Murray Logan"
-date: "16 March 2019"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     code_folding: show

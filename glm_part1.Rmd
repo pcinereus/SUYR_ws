@@ -56,7 +56,7 @@ library(car)
 
 Here is an example from @Fowler-1998-1998. An agriculturalist was interested in the effects of fertilizer load on the yield of grass.  Grass seed was sown uniformly over an area and different quantities of commercial fertilizer were applied to each of ten 1 m<sup>2</sup> randomly located plots.  Two months later the grass from each plot was harvested, dried and weighed.  The data are in the file **fertilizer.csv** in the **data** folder.
 
-![](../images/turf.jpg){width=70%}
+![](images/turf.jpg){width=70%}
 
 | FERTILIZER   | YIELD   |
 | ------------ | ------- |
@@ -90,6 +90,7 @@ $$
 y_i \sim{} \mathcal{N}(\mu_i, \sigma^2)\\
 \mu_i = \beta_0 + \beta_1 x_i
 $$
+
 
 # Fit the model
 
