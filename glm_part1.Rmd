@@ -30,6 +30,7 @@ output:
     highlight: tango
     toc: yes
     toc_depth: 2
+output_dir: "docs"
 documentclass: article
 fontsize: 12pt
 mainfont: Arial
