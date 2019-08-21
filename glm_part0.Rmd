@@ -54,18 +54,244 @@ library(gganimate) #for animations
 library(gridExtra) #for additional plotting routines
 ```
 
-## Motivating example 1
-Lets start by making some fabricated data.  We will generate 10 values drawn
-randomly from a normal (Gaussian) distribution with a mean of 0 and a standard
-deviation of 1. To ensure reproducibility, we will set the random seed.
+# Preamble
 
-```{r Data, results='markdown', eval=TRUE}
-set.seed(123)
-y = rnorm(n=10, mean=0, sd=1)
-y
+Statistics is a branch of mathematics.  Therefore it is inevitable that this
+tutorial WILL visit numerous mathematical concepts and present mathematical
+numenclature.  In an attempt to contain the dread felt by readers who have long
+seen off the tortorous high school mathematics lessons,  I will try to introduce
+these elements as gently as possible and will attempt to maintain a consistent
+use of symbology throughout.  Keep in mind, that although it is possible to fit
+linear models without understanding the underlying mathematics, a more solid
+grounding will help ensure that models are fit and interpreted correctly.
+
+
+# Linear models
+
+One of the main goals of fitting a statistical model is to use a sample of
+observed data to be able to gain some insights into the presence or nature of
+relationships between a response and predictors in a defined population.  This
+is achieved by first proposing one or more (deterministic) mathematical
+representations of possible relationships and then challenge the representation
+with data.
+
+For example, we might propose that an increase in a predictor ($x$) will be
+associated with a linear increase in a response ($y$).
+
+```{r mod1, results='markdown', eval=TRUE, echo=FALSE, fig.height=3,fig.width=3, warning=FALSE}
+x=1:10
+y=2+5*x
+ggplot(data=NULL, aes(y=y, x=x)) + geom_line() + theme_classic() +
+    theme(axis.text=element_blank(), axis.ticks=element_blank())
 ```
 
-We know that the mean and variance of our data ($y$) can be calculated as:
+The general mathematical equation of the linear line is:
+
+$$
+y_i = \beta_0 + \beta x_i
+$$
+
+where:
+
+- $y_i$ represents a vector (think single variable) of response values
+  (the subset $i$ is a way to indicate that there are multiple values), 
+- $x_i$ represents the value of the $ith$ observed predictor value.  
+- $\beta_0$ represents a single y-intercept (expected value of $y$ when $x$=0),
+- $\beta$ represents the __slope__ of the linear line (this is the rate of
+  change in $y$ associated with 1 unit change in $x$).
+
+The above expression can be re-written as:
+$$
+y_i = \beta_0\times 1 + \beta_1\times x_i
+$$
+
+which we can visualize in vector/matrix form as:
+$$
+\underbrace{\begin{bmatrix}
+y_1\\
+y_2\\
+y_3\\
+...\\
+y_i
+\end{bmatrix}}_{Y} = 
+\underbrace{\begin{bmatrix}
+1&x_1\\
+1&x_2\\
+1&x_3\\
+...\\
+1&x_i
+\end{bmatrix}}_{\boldsymbol{X}}
+\underbrace{\vphantom{\begin{bmatrix}
+y_1\\
+y_2\\
+y_3\\
+...\\
+y_i
+\end{bmatrix}}\begin{bmatrix}
+\beta_0&\beta
+\end{bmatrix}}_{\boldsymbol{\beta}}
+$$
+
+
+So given a sample of observed response ($y$) and predictor ($x$) values, we want
+to be able to estimate the two unknowns ($\beta_0$ and $\beta$) in the above
+mathematical expression.  If we assume that there is no uncertainty in the data,
+we can easily calculate the necessary value of $\beta_0$ and $\beta$ using any
+two data pairs and solving simultaneous equations.
+
+<details><summary>simultaneous equations solution</summary>
+$$
+\begin{align}
+7 =& \beta_0 + \beta 1, 12 = \beta_0 + \beta 2\\
+\beta_0 =& 7 - \beta ~~(\text{isolate }\beta_0\text{ from the first equation})\\
+\beta =& 5 ~~(\text{solve for }\beta)\\
+\beta_0 =& 2 ~~(\text{substitute }\beta\text{ and solve for }\beta_0)\\
+\end{align}
+$$
+</details>    
+    
+	
+The above model is a deterministic or mathematical model - it suggests complete
+confidence in the relationship.  As already indicated, the point of statistical
+modelling is to formulate the equation in the presence of a sample of data drawn
+from the actual population.   The models themselves are always a low-dimensional representation
+of reality.  They cannot hope to capture all the complexity contained in the
+system and nor do they want to.  They just want to provide insights into a very
+small fraction of this complexity.  
+
+Since a set of observed responses is likely to be the result of a large (if not
+infinite) number of interacting processes, the chances that all observed
+responses will respond to the predictor in exactly the same way is highly
+unlikely.  Therefore, in all data there is noise.
+In modelling, we want to see if there is any detectable signal amongst all the noise.
+
+Statistical models include both a deterministic component (a mathematical
+expression that relates a response to one or more predictors) as well as a
+stochastic component (representing uncertaintly).  For example, the following
+figures highlight the distinction between a purely deterministic (mathematical)
+model (left hand figure) and a statistical model (right hand figure).
+
+```{r compareModels, results='markdown', eval=TRUE, echo=FALSE, fig.height=3,fig.width=6, warning=FALSE}
+set.seed(234)
+x=1:10
+y=2+5*x
+y1=2+5*x + rnorm(10,0,4) 
+g1=ggplot(data=NULL, aes(y=y, x=x)) + geom_line() + theme_classic() +
+    annotate(geom='text', y=40, x=2, label=expression(y==2+5*x), parse=TRUE, hjust=0)
+g2=ggplot(data=NULL, aes(y=y1, x=x)) + geom_point() + geom_smooth(method='lm', se=FALSE) + theme_classic() +
+    annotate(geom='text', y=40, x=2, label=expression(y==2+5*x+epsilon), parse=TRUE, hjust=0) +
+    scale_y_continuous('y')
+grid.arrange(g1, g2, nrow=1)
+```
+
+
+The statistical model captures the stochastic component ($\varepsilon$) which
+represents the degree to which each observed value differs from what would be
+expected in the absence of any noise (uncertainty).  These differences between
+observed and expected values are called **residuals**.
+$$
+y_i = \beta_0 + \beta_1 x_i + \varepsilon_i
+$$
+
+Again, in vector and matrix form, this would be:
+$$
+\underbrace{\begin{bmatrix}
+y_1\\
+y_2\\
+y_3\\
+...\\
+y_i
+\end{bmatrix}}_{Y} = 
+\underbrace{\begin{bmatrix}
+1&x_1\\
+1&x_2\\
+1&x_3\\
+...\\
+1&x_i
+\end{bmatrix}}_{\boldsymbol{X}}
+\underbrace{\vphantom{\begin{bmatrix}
+y_1\\
+y_2\\
+y_3\\
+...\\
+y_i
+\end{bmatrix}}\begin{bmatrix}
+\beta_0&\beta
+\end{bmatrix}}_{\boldsymbol{\beta}} + 
+\underbrace{\begin{bmatrix}
+\varepsilon_1\\
+\varepsilon_2\\
+\varepsilon_3\\
+...\\
+\varepsilon_i
+\end{bmatrix}}_{\boldsymbol{\varepsilon}}
+$$
+
+- $Y$ represents a column vector of the observed data
+- $\boldsymbol{X}$ represents what is called the _model matrix_.  In this case,
+  that is just a single column matrix of 1s.  The ones indicate that there is an
+  intercept.  In matrix algebra, matrices are multiplied, so a column of ones
+  just ensures that the thing being multiplied does exist.
+- $\boldsymbol{\beta}$ represents a vector of parameters to be estimated.  In
+  this case, there is only one.
+- $\boldsymbol{\varepsilon}$ represents a column vector or residuals.  
+
+This could all be summarised as:
+$$
+Y = \boldsymbol{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}
+$$
+
+# Example data
+
+This tutorial will blend theoretical discussions with actual calculations and
+model fits.  I believe that by bridging the divide between theory and
+application, we all gain better understanding.  The applied components of this
+tutorial will be motivated by two fabricated data sets - one that simulates
+samples drawn from a Gaussian (normal) distribution and one that simulates
+samples drawn from a Poisson distribution.
+
+The advantage of simulated data over real data is that with simulated data, we
+know the 'truth' and can therefore gauge the accuracy of estimates.
+
+
+## Motivating example 1
+
+Lets formally simulate the data illustrated above.  The underlying process
+dictates that on average a one unit change in the predictor (`x`) will be associated with a five
+unit change in response (`y`) and when the predictor has a value of 0, the
+response will typically be 2.  Hence, the response (`y`) will be related to the predictor (`x`) via the following:
+
+$$
+y = 2 + 5x
+$$
+
+This is a deterministic model, it has no uncertainty. In order to simulate
+actual data, we need to add some random noise.  We will assume that the
+residuals are drawn from a Gaussian distribution with a mean of zero and
+standard deviation of 4.  The predictor will comprise of 10 uniformly
+distributed integer values between 1 and 10.  We will round the response to two
+decimal places.
+
+For repeatability, a seed will be employed on the random number generator.  
+Note, the smaller the dataset, the less it is likely to represent the underlying
+deterministic equation, so we should keep this in mind when we look at how
+closely our estimated parameters approximate the 'true' values. Hence, the 
+seed has been chosen to yield data that maintain a general trend that is
+consistent with the defining parameters.
+
+```{r sim, results='markdown', eval=TRUE, fig.width=3, fig.height=3}
+set.seed(234)
+dat = data.frame(x=1:10) %>%
+    mutate(y = round(2 + 5*x + rnorm(10, 0, 4), 2))
+dat
+ggplot(data=dat) + geom_point(aes(y=y, x=x))
+```
+
+We will use these data in two ways.  Firstly, to estimate the mean and variance
+of the reponse (`y`) ignoring the predcitor (`x`) and secondly to estimate the
+relationship between the reponse and predictor.
+
+For the former, we know that the mean and variance of the response (`y`) can be calculated as:
 
 $$
 \begin{align}
@@ -75,56 +301,68 @@ sd(y) =& \sqrt{var(y)}
 \end{align}
 $$
 
-```{r stats, results='markdown', eval=TRUE}
-mean(y)
-var(y)
-sd(y)
+```{r stats1, results='markdown', eval=TRUE}
+mean(dat$y)
+var(dat$y)
+sd(dat$y)
 ```
+
 
 ## Motivating example 2
 
-What if we have a continuous response and a continuous
-predictor and we want to estimate the rate of change (=slope) in the response
-that is associated with a unit change in the predictor.
+The Poisson distribution is only parameterized by a single parameter
+($\lambda$) which represents both the mean and variance.  Furthermore,
+Poisson data can only be positive integers.  
 
-As a motivating example, lets generate some data.  The response (`y`) will be related to the predictor (`x`) via the following:
+Unlike simple trend between two Gaussian or uniform distributions,
+modelling against a Poisson distribution alters the scale to
+logarithms.  This needs to be taken into account when we simulate the
+data.  The parameters that we used to simulate the underlying
+processes need to either be on a logarithmic scale, or else converted
+to a logarithmic scale prior to using them for generating the random
+data. 
 
-$$
-y = 2 + 5x
-$$
+Moreover, for any model that involves a non-identity link function
+(such as a logarithmic link function for Poisson models), 'slope' is
+only constant on the scale of the link function.  When it is back
+transformed onto the natural scale (scale of the data), it takes on a
+different meaning and interpretation.
 
-This is a deterministic model, it has no uncertainty. In order to simulate
-actual data, we need to add some random noise.  To keep this simple, the
-simulated data set will be small and all values will be integers.  Obviously,
-the smaller the dataset, the less it it likely to represent the underlying
-deterministic equation, so we should keep this in mind when we look at how
-closely our estimated parameters approximate the 'true' values.
+We will chose $\beta_0$ to represent a value of 2 when `x=0`.  As for
+the 'effect' of the predictor on the response, lets say that for every
+one unit increase in the predictor the response increaes by 20% (on
+the natural scale).  Hence, on the log scale, the slope will be
+$log(1.2)=$ `r log(1.2)`.
 
-```{r sim, results='markdown', eval=TRUE, fig.width=3, fig.height=3}
-set.seed(2)
-dat = data.frame(x = sample(1:100, size=10, replace=FALSE)) %>% 
-    mutate(y = 2 + 5*x + sample(-100:100,10))
-dat
-ggplot(data=dat) + geom_point(aes(y=y, x=x))
+```{r sim2, results='markdown', eval=TRUE, fig.width=3, fig.height=3}
+set.seed(123)
+beta = c(2, 1.20)
+beta=log(beta)
+n = 10
+dat2 = data.frame(x=seq(1,10,len=n)) %>%
+    mutate(y = rpois(n, lambda=exp(beta[1] + beta[2]*x)))
+dat2
+ggplot(data=dat2) + geom_point(aes(y=y, x=x)) 
 ```
 
 # OLS
 
-## Motivating example 1
+## Motivating example 1 (response only)
 
-The Ordinary Least Squares (**OLS**) estimate of a **parameter** (e.g the mean,
-$\mu$) is the value of this parameter that minimize the sum of the square
-residuals (e.g. $(y_i-\mu)^2$).  That is, it minimize the total difference
-between the observed values ($x_i$) and those expected ($\mu$).  We __could__
-calculate the residual sum of squares (RSS) for a large number of combinations
-of potential parameter values in order to find the 'optimum' parameter values
-(those that minimize RSS).
+The Ordinary Least Squares (**OLS**) estimate of a **parameter** (e.g
+the mean, $\mu$) is the value of this parameter that minimize the sum
+of the square residuals (e.g. $(y_i-\mu)^2$).  That is, it minimize
+the total difference between the observed values ($x_i$) and those
+expected ($\mu$).  We __could__ calculate the residual sum of squares
+(RSS) for a large number of combinations of potential parameter values
+in order to find the 'optimum' parameter values (those that minimize
+RSS).
 
 ```{r olsSim, results='markdown', eval=TRUE}
-mu = seq(-5,5,len=1000)
+mu = seq(15,40,len=1000)
 rss = vector('numeric', length(mu))
 for (i in 1:length(mu)) {
-    rss[i] = sum((y - mu[i])^2)
+    rss[i] = sum((dat$y - mu[i])^2)
 }
 mu[which(rss==min(rss))]
 ggplot(data=NULL) + geom_line(aes(y=rss, x=mu))
@@ -250,10 +488,10 @@ $$
 \end{bmatrix}
 $$
 
-Based on all this, we could re-write $\boldsymbol{\varepsilon}'\boldsymbol{\varepsilon}$ as:
+Based on all this, we could re-write $\boldsymbol{\varepsilon}^T\boldsymbol{\varepsilon}$ as:
 
 $$
-\boldsymbol{\varepsilon}'\boldsymbol{\varepsilon} = (Y - \boldsymbol{X}\boldsymbol{\beta})'(Y - \boldsymbol{X}\boldsymbol{\beta})
+\boldsymbol{\varepsilon}^T\boldsymbol{\varepsilon} = (Y - \boldsymbol{X}\boldsymbol{\beta})^T(Y - \boldsymbol{X}\boldsymbol{\beta})
 $$
 
 If we then take the derivatives of the above with respect to
@@ -262,23 +500,23 @@ minimizes the sum of square residuals.
 Altimately, we arrive at:
 
 $$
-\boldsymbol{\beta} = \underbrace{(\boldsymbol{X}'\boldsymbol{X})^{-1}}_{\frac{1}{n}} \underbrace{\boldsymbol{X}' Y}_{\sum^n_{i=1}y_i}
+\boldsymbol{\beta} = \underbrace{(\boldsymbol{X}^T\boldsymbol{X})^{-1}}_{\frac{1}{n}} \underbrace{\boldsymbol{X}^T Y}_{\sum^n_{i=1}y_i}
 $$
 
-where $(\boldsymbol{X}'\boldsymbol{X})^{-1}$ is the inverse of
-$(\boldsymbol{X}'\boldsymbol{X})$.  In matrix algebra, matrices are never
+where $(\boldsymbol{X}^T\boldsymbol{X})^{-1}$ is the inverse of
+$(\boldsymbol{X}^T\boldsymbol{X})$.  In matrix algebra, matrices are never
 divided, only multiplied.  Therefore, to divide by
-$(\boldsymbol{X}'\boldsymbol{X})$, it is necessary to multiply by the inverse of
-$(\boldsymbol{X}'\boldsymbol{X})^{-1}$, in the same way that dividing by $n$ is
+$(\boldsymbol{X}^T\boldsymbol{X})$, it is necessary to multiply by the inverse of
+$(\boldsymbol{X}^T\boldsymbol{X})^{-1}$, in the same way that dividing by $n$ is
 the same as multiplying by the inverse of $n$ which is of course $\frac{1}{n}$.
 
 In the above equation, we can see how the matrix form translates directly into
-the simple calculation of a mean.  $(\boldsymbol{X}'\boldsymbol{X})^{-1}$
-equates to $\frac{1}{n}$ and $\boldsymbol{X}' Y$ equates to $\sum^n_{i=1}y_i$.
+the simple calculation of a mean.  $(\boldsymbol{X}^T\boldsymbol{X})^{-1}$
+equates to $\frac{1}{n}$ and $\boldsymbol{X}^T Y$ equates to $\sum^n_{i=1}y_i$.
 
 So to estimate $\boldsymbol{\beta}$, all we have to do is perform the above
 matrix multiplications.  Unfortunately, matrix inversion (e.g. calculating
-$(\boldsymbol{X}'\boldsymbol{X})^{-1}$) is not always straight forward. _Note in
+$(\boldsymbol{X}^T\boldsymbol{X})^{-1}$) is not always straight forward. _Note in
 this case it is straight forward, because the matrix only has a single value_).
 
 In order to be able to invert a matrix, the following must be satisfied:
@@ -296,10 +534,10 @@ In R, this can be achieved via the `solve()` (or `qr.solve()`) _functions_.
 
 ```{r mm, results='markdown', eval=TRUE}
 ## Generate the single column matrix of 1s
-X = cbind(rep(1,length(y)))
+X = cbind(rep(1,length(dat$y)))
 ## perform the matrix multiplications to solve for beta
 ## beta = (X'X)^-1 X'Y
-beta = solve(t(X) %*% X) %*% t(X) %*% y
+beta = solve(t(X) %*% X) %*% t(X) %*% dat$y
 beta
 ```
 
@@ -307,9 +545,9 @@ This is the same as the empirical mean we calculated earlier.
 
 
 
-## Linear regression via matrix algebra (Example 2)
+## Linear regression via matrix algebra (example 1 data)
 
-Recall the motivating example 2 data as:
+Recall the motivating example 1 data as:
 
 ```{r ex2, results='markdown', eval=TRUE}
 dat
@@ -358,7 +596,7 @@ residuals (random noise).
 Recall that in order to estimate $\boldsymbol{\beta}$, we solve the following:
                                    
 $$
-\boldsymbol{\beta} = (\boldsymbol{X}'\boldsymbol{X})^{-1} \boldsymbol{X}' Y
+\boldsymbol{\beta} = (\boldsymbol{X}^T\boldsymbol{X})^{-1} \boldsymbol{X}^T Y
 $$
 
 
@@ -375,7 +613,7 @@ This whole process, and more is conveniently wrapped into a simple function with
 lm(y~x, data=dat)
 ```
 
-# Iterative re-weighted least squares
+# Generalized linear models
 
 Recall from the previous section that the simple linear model can be written as:
 $$
@@ -456,152 +694,24 @@ where $D$ is the nominated family, $g$ is the link function and $...$ represents
 any additional parameters required by the nominated distribution (such as
 $\sigma^2\boldsymbol{W}^{-1}$ in the case of the Gaussian distribution).
 
-In regular OLS regression we are trying to minimize the sum squares of residuals
-($||Y - \boldsymbol{X}\boldsymbol{\beta}||^2$).  This assumes that all residuals
-are independent and identically distributed as each will be given equal weight
-when summing.  However, we may wish to weight some observations (residuals) more
-heavily than others.  For example, a reasonably common situation is for the
-variance to be related to the mean (typically as the mean increases, so does the
-variance).  We can partly compensate for this be weighting the residuals
-inversely proportional to the mean ($w_i = 1/\mu_i$). 
-
-Now, rather than trying to minimise the sum squares of residuals ($||Y - \boldsymbol{X}\boldsymbol{\beta}||^2$), 
-we now try to minimise the sum weighted residuals ($||Y -
-\boldsymbol{X}\boldsymbol{\beta}||^\boldsymbol{p}$), where $\boldsymbol{p}$ is a
-vector of powers. 
-
-This can also (and once we take into consideration the link function), be written
-as the sum square of weighted residuals ($(g(\boldsymbol{X}\boldsymbol{\beta}) -
-Y)'\boldsymbol{W}(g(\boldsymbol{X}\boldsymbol{\beta}) - Y)$), where
-$\boldsymbol{W}$ is the diagonal of a weights matrix.
-
-Rather than calculate the residuals on the response scale (by backtransforming
-the linear predictor $\boldsymbol{X}\boldsymbol{\beta}$ to the same scale as the
-response $Y$), the residuals are typically calculated on the link scale after
-adjusting the response variable onto this scale.
-
-The response is adjusted ($\boldsymbol{z}$) by adding the difference between observed and expected
-(natural scale) re-mapped onto the link scale (by dividing by the derivative of
-the expected value on the natural scale) to the expected value (on the link
-scale).
-
-$$
-\boldsymbol{z} = \boldsymbol{\eta} + \frac{Y-g(\boldsymbol{\eta})}{g'(\boldsymbol{\eta})}
-$$
-
-where $\eta$ is the estimated linear predictor (predicted value of $y$ on the
-scale of the link function), $g(\eta)$ is the inverse link of $\eta$ and
-$g'(\eta)$ is the derivative of $g(\eta)$.
-
-The weighted least squares formulation then becomes:
-$$
-\boldsymbol{\beta} = (\boldsymbol{X}'\boldsymbol{W}\boldsymbol{X}^{-1})\boldsymbol{X}'\boldsymbol{W}\boldsymbol{z}
-$$
-
-where $\boldsymbol{W}$ is the diagonal of a weights matrix:
-
-$$
-\boldsymbol{W} = diag\left(\frac{g'(\boldsymbol{\eta})^2}{var(g(\boldsymbol{\eta}))}\right)
-$$
-
-Unfortunately, there is no closed form solution for the above and thus it is
-usually solved iteratively, and is thus called **iterative re-weighted least
-squares**.  A very simplistic implementation of an iterative re-weighted least
-squares could be:
-
-1. Start with some initial values for the parameters ($\beta$} - typically 0 for
-   each parameter (on the link scale and thus, 1 on the response scale)
-2. Calculate the predicted value of the response given the current estimates of
-   $\boldsymbol{\beta}$ as well as the adjusted response ($\boldsymbol{z}$) and
-   weights ($\boldsymbol{W}$).
-3. Update the estimated parameter values
-4. Repeat septs 2-3 until either the maximum number of iterations has occurred
-   or a measure of the difference between successive iterations is below a set tolerance.
-
-<details><summary>Code used to implement a simple iterative re-weighted least
-squares algorithm</summary>
-```{r optim.IRLS, results='markdown', eval=TRUE}
-optim.IRLS = function(X, y, family, iter.max=25, abs.tol=1e-06) {
-    oldpar <- newpar <- rep(0, ncol(X))
-    iter <- 0; not.converged <- 1; not.max.iter <- 1
-    while (not.converged & not.max.iter) {
-        eta = X %*% newpar         # calculate (update) the linear predictor
-        g = family()$linkinv(eta)  # calculate (update) the linear predictor on the natural scale (inverse link)
-        g. = family()$mu.eta(eta)  # calculate (update) the derivative of linear predictor on natural scale
-        z = eta + (y - g) / g.     # calculate (update) the  adjusted response
-        W = as.vector(g.^2 / family()$variance(g))  # calculate (update) the weights
-        oldpar = newpar
-        newpar = solve(crossprod(X,W*X), crossprod(X,W*z), tol=2*.Machine$double.eps)
-        iter = iter + 1
-        not.max.iter <- (iter < iter.max)*1
-        not.converged=(max(abs((1-newpar/oldpar)))>abs.tol)*1
-    }
-    list(B.optim=newpar, Iter=iter-1)
-}
-```
-</details>
-
-Note, when the family is Gaussian, the above is simplified to the OLS form:
-
-$$
-\begin{align}
-\boldsymbol{\beta} =& 0\\
-\boldsymbol{\eta} =& \boldsymbol{X}\boldsymbol{\beta} = 0\\
-\boldsymbol{z} =& \boldsymbol{\eta} +
-\frac{Y-g(\boldsymbol{\eta})}{g'(\boldsymbol{\eta})} = 0 + \frac{Y-0}{1} = Y\\
-\boldsymbol{W} =&
-diag\left(\frac{g'(\boldsymbol{\eta})^2}{var(g(\boldsymbol{\eta}))}\right) =
-diag(1^2/1) = 1\\
-\boldsymbol{\beta} =&
-(\boldsymbol{X}'\boldsymbol{W}\boldsymbol{X}^{-1})\boldsymbol{X}'\boldsymbol{W}\boldsymbol{z}
-= (\boldsymbol{X}'\boldsymbol{X}^{-1})\boldsymbol{X}'Y
-\end{align}
-$$
 
 
-Lets try it out
-```{r optim.IRLS.fit1, results='markdown', eval=TRUE}
-optim.IRLS(cbind(rep(1,length(y))), y, family=gaussian)
-```
 
-This estimate is (not surprisingly) identical to the OLS estimate.
-
-So what if we modified the response such that it was some positive integers and
-we nominate a Poisson distribution..
-
-```{r optim.IRLS.fit2, results='markdown', eval=TRUE}
-y1 = floor(y*5 + 8)
-mean(y1)
-optim.IRLS(cbind(rep(1,length(y))), y1, family=poisson)
-```
-
-After `r optim.IRLS(cbind(rep(1,length(y))), y1,
-family=poisson)$Iter` iterations, the algorithm converged on an estimate of 
-`r optim.IRLS(cbind(rep(1,length(y))), y1, family=poisson)$B.optim`,
-which on the natural scale would be 
-`r exp(optim.IRLS(cbind(rep(1,length(y))), y1, family=poisson)$B.optim)`.
-
-In R, there is an inbuilt function called `glm()` that fits generalized linear
-models by default via iterative re-weighted least squares.
-
-```{r optim.IRLS.fit3, results='markdown', eval=TRUE}
-glm(y1 ~ 1, family=poisson)
-```
 
 
 
 # Maximum likelihood
 
-Ordinary Least Squares provides an elegant solution for when the data satisfy
-certain assumptions (normality, homogeneity, independence, etc), yet for many
-other situations, it is not appropriate.
+Ordinary Least Squares provides an elegant solution for when the data
+satisfy certain assumptions (normality, homogeneity, independence,
+etc), yet for many other situations, it is not appropriate.
 
 ## Motivating example 1
 
 As with OLS, lets start with motivating example 1 data
 
 ```{r ex1, results='markdown', eval=TRUE}
-y
+dat$y
 ```
 
 A more general alternative to OLS is Maximum Likelihood (ML).
@@ -710,9 +820,9 @@ is holding the other parameter constant.
 
 
 ```{r mle, results='markdown', eval=TRUE}
-mu = seq(-2,2,len=1000)
+mu = seq(15,40,len=1000)
 theta=cbind(mu=mu,sigma=1)
-B=apply(theta, 1, LL.gaus, y)
+B=apply(theta, 1, LL.gaus, dat$y)
 theta[which(B==min(B)),]
 ggplot(data=NULL) + geom_line(aes(y=B, x=theta[,'mu']))
 ```
@@ -781,10 +891,10 @@ associated with the minimum negative log-likelihood and thus maximum
 log-likelihood) are indicated by the black solid point.
 
 ```{r bruteForce, results='markdown', eval=TRUE, fig.width=4, fig.height=4}
-mu = seq(-0.5,0.5,len=100)
-sigma=seq(0.75,1.25,len=100)
+mu = seq(15,40,len=100)
+sigma=seq(10,20,len=100)
 theta = expand.grid(mu=mu, sigma=sigma)
-theta$LL=apply(theta, 1, LL.gaus, x=y)
+theta$LL=apply(theta, 1, LL.gaus, x=dat$y)
 ggplot(data=theta,aes(y=mu, x=sigma, fill=LL)) +
     geom_tile(show.legend=FALSE) + geom_contour(aes(z=LL)) +
     geom_point(data=theta[which(theta$LL==min(theta$LL)),], aes(y=mu, x=sigma), fill='black') +
@@ -950,9 +1060,9 @@ remain as open triangle.
 
 ```{r simplexAnim, results='markdown', eval=TRUE, warning=FALSE, message=FALSE, cache=TRUE}
 ## Starting values at the center of the vectices
-params.init=c(mu=-0.25, sigma=1)
-d.mu=0.05
-d.sigma=0.02
+params.init=c(mu=20, sigma=12)
+d.mu=0.5
+d.sigma=0.3
 simplex = rbind(Vertex1=params.init + c(d.mu,d.sigma),
                 Vertex2=params.init + c(-d.mu,d.sigma),
                 Vertex3=params.init + c(-d.mu,-d.sigma)) %>%
@@ -963,11 +1073,11 @@ base.plot = ggplot(data=theta,aes(y=mu, x=sigma)) +
     scale_x_continuous(expand=c(0,0)) +
     scale_y_continuous(expand=c(0,0))
 
-newdata =vector('list', 10)
-a=get.optim.NM(X.vert=as.matrix(simplex), params.init, objective.fn=LL.gaus, x=y, iter.max=1, control=list(fnscale=1,refl=1,expan=2,contr=-0.5,shrink=0.5))
+newdata =vector('list', 15)
+a=get.optim.NM(X.vert=as.matrix(simplex), params.init, objective.fn=LL.gaus, x=dat$y, iter.max=1, control=list(fnscale=1,refl=1,expan=2,contr=-0.5,shrink=0.5))
 newdata[[1]] =data.frame(a$X.vert)
-for (i in 2:10) {
-    a=get.optim.NM(X.vert=a$X.vert, params.init=a$X.optim, objective.fn=LL.gaus, x=y, iter.max=1, control=list(fnscale=1,refl=1,expan=2,contr=-0.5,shrink=0.5))
+for (i in 2:15) {
+    a=get.optim.NM(X.vert=a$X.vert, params.init=a$X.optim, objective.fn=LL.gaus, x=dat$y, iter.max=1, control=list(fnscale=1,refl=1,expan=2,contr=-0.5,shrink=0.5))
     newdata[[i]] = data.frame(a$X.vert)
 }
 newdata = bind_rows(newdata, .id='Iter') %>% mutate(Iter=factor(Iter, levels=unique(Iter)))
@@ -993,8 +1103,8 @@ configurations to ensure that any single optimization has not just settled n a
 local minimum (maximum).
 
 ```{r simplexOptimNM, results='markdown', eval=TRUE}
-get.optim.NM(X.vert=as.matrix(simplex), params.init, objective.fn=LL.gaus, x=y, iter.max=250, abs.tol=1e-08, control=list(fnscale=1,refl=1,expan=2,contr=-0.5,shrink=0.5))
-get.optim.NM(X.vert=as.matrix(simplex - c(-0.5,0.02)), params.init, objective.fn=LL.gaus, x=y, iter.max=250, abs.tol=1e-08, control=list(fnscale=1,refl=1,expan=2,contr=-0.5,shrink=0.5))
+get.optim.NM(X.vert=as.matrix(simplex), params.init, objective.fn=LL.gaus, x=dat$y, iter.max=250, abs.tol=1e-08, control=list(fnscale=1,refl=1,expan=2,contr=-0.5,shrink=0.5))
+get.optim.NM(X.vert=as.matrix(simplex - c(-0.5,0.2)), params.init, objective.fn=LL.gaus, x=dat$y, iter.max=250, abs.tol=1e-08, control=list(fnscale=1,refl=1,expan=2,contr=-0.5,shrink=0.5))
 ```
 
 The two sets of estimated parameters (listed as `X.optim`) are very similar
@@ -1013,7 +1123,7 @@ optimization _control parameters_ include:
    convergence is reached.
 
 ```{r simplexOptim, results='markdown', eval=TRUE}
-optim(par=c(-0.25,1), LL.gaus, x=y, control=list(fnscale=1))
+optim(par=c(20,12), LL.gaus, x=dat$y, control=list(fnscale=1))
 ```
 
 We can see that the negative log-likelihood calculation was performed 51 times
@@ -1279,7 +1389,7 @@ while (not.converged & not.max.iter) {
 ```
 
 ```{r NManim3, results='markdown', eval=TRUE, cache=TRUE, warning=FALSE, message=FALSE, fig.width=6, fig.height=4}
-params.init=c(mu=-0.25, sigma=1)
+params.init=c(mu=20, sigma=12)
 
 ## The following function calculates the difference-quotient approximation of gradient
 approx.grad = function(theta, fn, eps=1e-05) {
@@ -1314,10 +1424,10 @@ optim.NR = function(params.init, fn, x, iter.max=250, abs.tol=1e-05, control=lis
 
 #optim.NR(params.init, fn=function(t) LL.gaus(t, x=y), iter.max=1)
 
-mu = seq(-0.5,0.5,len=100)
-sigma=seq(0.75,1.25,len=100)
+mu = seq(15,040,len=100)
+sigma=seq(10,20,len=100)
 theta = expand.grid(mu=mu, sigma=sigma)
-theta$LL=apply(theta, 1, LL.gaus, x=y)
+theta$LL=apply(theta, 1, LL.gaus, x=dat$y)
 
 base.plot = ggplot(data=theta,aes(y=mu, x=sigma)) +
     geom_tile(aes(fill=LL), show.legend=FALSE) + geom_contour(aes(z=LL)) +
@@ -1329,7 +1439,7 @@ newdata =vector('list', 10)
 newdata[[1]] =data.frame(t(setNames(params.init, c('mu','sigma'))))
 p.i = params.init
 for (i in 2:10) {
-    a=optim.NR(params.init=p.i, fn=function(t) LL.gaus(t, x=y), iter.max=1)
+    a=optim.NR(params.init=p.i, fn=function(t) LL.gaus(t, x=dat$y), iter.max=1)
     newdata[[i]] = data.frame(t(setNames(a$final,c('mu','sigma'))))
     p.i = as.vector(a$final)
 }
@@ -1349,7 +1459,7 @@ anim_save('NMAnim3.gif', animation=ga, path='images')
 Now lets allow the routine (`optim.NR()` defined in the concealed code above) to run to convergence.
 
 ```{r NManim4, results='markdown', eval=TRUE, cache=TRUE, warning=FALSE, message=FALSE, fig.width=6, fig.height=4}
-optim.NR(params.init, fn=function(t) LL.gaus(t, x=y))
+optim.NR(params.init, fn=function(t) LL.gaus(t, x=dat$y))
 ```
 Again, we see that these estimates (`final` in the output) are very similar to
 the empirical calculations.  Furthermore, notice that convergence took only 5
@@ -1364,15 +1474,15 @@ SE = \sqrt{diag(\boldsymbol{H})}
 $$
 
 ```{r NManim5, results='markdown', eval=TRUE, cache=TRUE, warning=FALSE, message=FALSE, fig.width=6, fig.height=4}
-H=optim.NR(params.init, fn=function(t) LL.gaus(t, x=y))$hessian
+H=optim.NR(params.init, fn=function(t) LL.gaus(t, x=dat$y))$hessian
 sqrt(diag(solve(H)))
 ```
 
 R has an inbuilt routine (`nlm()`) that performs the Newton-like method for optimisation.
 
 ```{r NManim6, results='markdown', eval=TRUE, cache=TRUE, warning=FALSE, message=FALSE, fig.width=6, fig.height=4}
-nlm(LL.gaus, params.init, x=y, hessian=TRUE, gradtol=1e-03)
-H=nlm(LL.gaus, params.init, x=y, hessian=TRUE, gradtol=1e-06*2)$hessian
+nlm(LL.gaus, params.init, x=dat$y, hessian=TRUE, gradtol=1e-03)
+H=nlm(LL.gaus, params.init, x=dat$y, hessian=TRUE, gradtol=1e-06*2)$hessian
 sqrt(diag(solve(H)))
 ```
 
@@ -1467,8 +1577,8 @@ iters = 2500
 newdata =vector('list', iters)
 bestpar = p.i
 for (i in 1:iters) {
-    a=optim.SANN(params.init=p.i, fn=function(t) LL.gaus(t, x=y), iter.max=1, jump=0.05, k=0.1)
-    if (LL.gaus(a$last, x=y)<LL.gaus(bestpar, x=y)) bestpar=a$last
+    a=optim.SANN(params.init=p.i, fn=function(t) LL.gaus(t, x=dat$y), iter.max=1, jump=0.5, k=0.1)
+    if (LL.gaus(a$last, x=dat$y)<LL.gaus(bestpar, x=dat$y)) bestpar=a$last
     newdata[[i]] = data.frame(t(setNames(a$last,c('mu','sigma'))), iter=floor(log2(i))+1, t(setNames(bestpar,c('bestmu','bestsigma'))))
     p.i = as.vector(a$last)
 }
@@ -1490,7 +1600,7 @@ anim_save('SANNAnim1.gif', animation=ga, path='images')
 Allowing the simulated annealing to iterate 2500 times (with updating $k$):
 
 ```{r SANNoptim, results='markdown', eval=TRUE, cache=TRUE, warning=FALSE, message=FALSE, fig.width=6, fig.height=4}
-optim.SANN(params.init=c(-0.25,1), fn=function(t) LL.gaus(t, x=y), iter.max=2500, jump=0.05, k=0.1)
+optim.SANN(params.init=c(20,12), fn=function(t) LL.gaus(t, x=dat$y), iter.max=2500, jump=0.5, k=0.1)
 ```
 
 Which is again very similar the empirical estimates.
@@ -1596,10 +1706,239 @@ optim(c(1,1,1), LL.gaus, y=dat$y, X=X, method='SANN')
 optim(c(277,1,100), LL.gaus, y=dat$y, X=X, method='SANN')
 ```
 
-### glm
-```{r GLM, results='markdown', eval=TRUE}
-summary(A<-glm(y~x, data=dat))
+
+
+
+# Iterative re-weighted least squares
+
+Recall from the previous section that the simple linear model can be written as:
+$$
+\begin{align}
+y_i =& \beta_0 + \beta_1 x_i + \varepsilon_i\\
+Y =& \boldsymbol{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}
+\end{align}
+$$
+
+This could be re-written as:
+
+$$
+\begin{align}
+y_i \sim{}& N(\mu_i, \sigma^2I)\\
+\mu_i =& \beta_0 + \beta_1 x_i\\
+\end{align}
+$$
+
+indicating that the response ($y$) is distributed as a Gaussian (normal) the
+mean of which is determined by the linear relationship with $x$ and there is a
+constant variance ($\sigma^2$) - all observations are independently and
+identically distributed (_iid_) - independently drawn from a distribution with
+the same variance.
+
+The $I$ signifies an identity matrix (a square matrix whose diagonals are all one).
+
+More generally, the above can be written in vector/matrix form as:
+$$
+\begin{align}
+Y \sim{}& N(\boldsymbol{\mu}, \sigma^2I)\\
+\boldsymbol{\mu} =& \boldsymbol{X}\boldsymbol{\beta}\\
+\end{align}
+$$
+
+If we suspect that the residuals are not independent and identically distributed
+(if for example they were Poisson distributed), then we could alter (generalise)
+the above to:
+
+$$
+\begin{align}
+Y \sim{}& N(\boldsymbol{\mu}, \sigma^2\boldsymbol{W}^{-1})\\
+\boldsymbol{\mu} =& \boldsymbol{X}\boldsymbol{\beta}\\
+\end{align}
+$$
+
+where $\boldsymbol{W}$ is a matrix of positive diagonals .
+
+This allows us to generalise to other (exponential) families (such as Binomial,
+Poisson, Negative Binomial, Gamma etc).  For example, if our response ($Y$) were
+count data, we might consider a Poisson.
+
+$$
+\begin{align}
+Y \sim{}& Pois(\boldsymbol{\lambda})\\
+\boldsymbol{\lambda} =& e^{\boldsymbol{X}\boldsymbol{\beta}}\\
+&\text{OR equivalently}\\
+log(\boldsymbol{\lambda}) =& \boldsymbol{X}\boldsymbol{\beta}\\
+\end{align}
+$$
+
+The Poisson distribution ($P(x|\lambda) = e^{-\lambda}\lambda^x/x!$) is
+parameterised by a single parameter ($\lambda$) that represents both the mean
+and variance (as well as degrees of freedom).  Poisson data are bound at the
+lower end by zero (negative values are not defined) - it is not possible to
+count fewer than 0 things.  The Poisson family includes an exponential term,
+therefore to map the expected values back onto the natural scale (scale of the
+observed data), we use a **link** function (in the case of the Poission, this
+link is a log link).  Hence the above can be generalized even further to:
+
+$$
+\begin{align}
+Y \sim{}& D(\boldsymbol{\eta}, ...)\\
+g(\boldsymbol{\eta}) =& \boldsymbol{X}\boldsymbol{\beta}\\
+\end{align}
+$$
+
+where $D$ is the nominated family, $g$ is the link function and $...$ represents
+any additional parameters required by the nominated distribution (such as
+$\sigma^2\boldsymbol{W}^{-1}$ in the case of the Gaussian distribution).
+
+In regular OLS regression we are trying to minimize the sum squares of residuals
+($||Y - \boldsymbol{X}\boldsymbol{\beta}||^2$).  This assumes that all residuals
+are independent and identically distributed as each will be given equal weight
+when summing.  However, we may wish to weight some observations (residuals) more
+heavily than others.  For example, a reasonably common situation is for the
+variance to be related to the mean (typically as the mean increases, so does the
+variance).  We can partly compensate for this be weighting the residuals
+inversely proportional to the mean ($w_i = 1/\mu_i$). 
+
+Now, rather than trying to minimise the sum squares of residuals ($||Y - \boldsymbol{X}\boldsymbol{\beta}||^2$), 
+we now try to minimise the sum weighted residuals ($||Y -
+\boldsymbol{X}\boldsymbol{\beta}||^\boldsymbol{p}$), where $\boldsymbol{p}$ is a
+vector of powers. 
+
+This can also (and once we take into consideration the link function), be written
+as the sum square of weighted residuals ($(g(\boldsymbol{X}\boldsymbol{\beta}) -
+Y)^T\boldsymbol{W}(g(\boldsymbol{X}\boldsymbol{\beta}) - Y)$), where
+$\boldsymbol{W}$ is the diagonal of a weights matrix.
+
+Rather than calculate the residuals on the response scale (by backtransforming
+the linear predictor $\boldsymbol{X}\boldsymbol{\beta}$ to the same scale as the
+response $Y$), the residuals are typically calculated on the link scale after
+adjusting the response variable onto this scale.
+
+The response is adjusted ($\boldsymbol{z}$) by adding the difference between observed and expected
+(natural scale) re-mapped onto the link scale (by dividing by the derivative of
+the expected value on the natural scale) to the expected value (on the link
+scale).
+
+$$
+\boldsymbol{z} = \boldsymbol{\eta} + \frac{Y-g(\boldsymbol{\eta})}{g'(\boldsymbol{\eta})}
+$$
+
+where $\eta$ is the estimated linear predictor (predicted value of $y$ on the
+scale of the link function), $g(\eta)$ is the inverse link of $\eta$ and
+$g'(\eta)$ is the derivative of $g(\eta)$.
+
+The weighted least squares formulation then becomes:
+$$
+\boldsymbol{\beta} = (\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}^{-1})\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{z}
+$$
+
+where $\boldsymbol{W}$ is the diagonal of a weights matrix:
+
+$$
+\boldsymbol{W} = diag\left(\frac{g'(\boldsymbol{\eta})^2}{var(g(\boldsymbol{\eta}))}\right)
+$$
+
+Unfortunately, there is no closed form solution for the above and thus it is
+usually solved iteratively, and is thus called **iterative re-weighted least
+squares**.  A very simplistic implementation of an iterative re-weighted least
+squares could be:
+
+1. Start with some initial values for the parameters ($\beta$} - typically 0 for
+   each parameter (on the link scale and thus, 1 on the response scale)
+2. Calculate the predicted value of the response given the current estimates of
+   $\boldsymbol{\beta}$ as well as the adjusted response ($\boldsymbol{z}$) and
+   weights ($\boldsymbol{W}$).
+3. Update the estimated parameter values
+4. Repeat septs 2-3 until either the maximum number of iterations has occurred
+   or a measure of the difference between successive iterations is below a set tolerance.
+
+<details><summary>Code used to implement a simple iterative re-weighted least
+squares algorithm</summary>
+```{r optim.IRLS, results='markdown', eval=TRUE}
+optim.IRLS = function(X, y, family, iter.max=25, abs.tol=1e-06) {
+    oldpar <- newpar <- rep(0, ncol(X))
+    iter <- 0; not.converged <- 1; not.max.iter <- 1
+    while (not.converged & not.max.iter) {
+        eta = X %*% newpar         # calculate (update) the linear predictor
+        g = family()$linkinv(eta)  # calculate (update) the linear predictor on the natural scale (inverse link)
+        g. = family()$mu.eta(eta)  # calculate (update) the derivative of linear predictor on natural scale
+        z = eta + (y - g) / g.     # calculate (update) the  adjusted response
+        W = as.vector(g.^2 / family()$variance(g))  # calculate (update) the weights
+        oldpar = newpar
+        newpar = solve(crossprod(X,W*X), crossprod(X,W*z), tol=2*.Machine$double.eps)
+        iter = iter + 1
+        not.max.iter <- (iter < iter.max)*1
+        not.converged=(max(abs((1-newpar/oldpar)))>abs.tol)*1
+    }
+    list(B.optim=newpar, Iter=iter-1)
+}
 ```
+</details>
+
+Note, when the family is Gaussian, the above is simplified to the OLS form:
+
+$$
+\begin{align}
+\boldsymbol{\beta} =& 0\\
+\boldsymbol{\eta} =& \boldsymbol{X}\boldsymbol{\beta} = 0\\
+\boldsymbol{z} =& \boldsymbol{\eta} +
+\frac{Y-g(\boldsymbol{\eta})}{g'(\boldsymbol{\eta})} = 0 + \frac{Y-0}{1} = Y\\
+\boldsymbol{W} =&
+diag\left(\frac{g'(\boldsymbol{\eta})^2}{var(g(\boldsymbol{\eta}))}\right) =
+diag(1^2/1) = 1\\
+\boldsymbol{\beta} =&
+(\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}^{-1})\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{z}
+= (\boldsymbol{X}^T\boldsymbol{X}^{-1})\boldsymbol{X}^TY
+\end{align}
+$$
+
+
+Lets try it out, starting with an intercept only model - which is just estimating the mean response value (according to a Poisson distribution).
+
+```{r optim.IRLS.fit1, results='markdown', eval=TRUE}
+optim.IRLS(cbind(rep(1,length(dat$y))), dat$y, family=gaussian)
+```
+
+This estimate is (not surprisingly) identical to the OLS estimate.
+
+So what if we modified the response such that it was some positive integers and
+we nominate a Poisson distribution..
+
+```{r optim.IRLS.fit2, results='markdown', eval=TRUE}
+optim.IRLS(cbind(rep(1,length(dat2$y))), dat2$y, family=poisson)
+exp(optim.IRLS(cbind(rep(1,length(dat2$y))), dat2$y, family=poisson)$B.optim)
+```
+
+After `r optim.IRLS(cbind(rep(1,length(dat2$y))), dat2$y, family=poisson)$Iter` iterations, 
+the algorithm converged on an estimate of 
+`r optim.IRLS(cbind(rep(1,length(dat2$y))), dat2$y, family=poisson)$B.optim`,
+which on the natural scale would be 
+`r exp(optim.IRLS(cbind(rep(1,length(dat2$y))), dat2$y, family=poisson)$B.optim)`.
+
+In R, there is an inbuilt function called `glm()` that fits generalized linear
+models by default via iterative re-weighted least squares.
+
+```{r optim.IRLS.fit3, results='markdown', eval=TRUE}
+glm(y ~ 1, data=dat2, family=poisson)
+```
+
+And now we will explore the full model:
+
+```{r optim.IRLS.fit4, results='markdown', eval=TRUE}
+X = model.matrix(~x, dat2)
+irls = optim.IRLS(X, dat2$y, family=poisson)
+irls
+exp(irls$B.optim)
+```
+
+Both estimates are very close to the parameters on which the simulated
+data were generated, and identical to those returned from the inbuilt
+`glm()` __function__.
+
+```{r optim.IRLS.fit5, results='markdown', eval=TRUE}
+glm(y ~ x, data=dat2, family=poisson)
+```
+
 
 Additional reading
 ===================
